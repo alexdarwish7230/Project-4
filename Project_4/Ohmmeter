@@ -1,0 +1,275 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <xc.h>
+#include <math.h>
+#include <p18f4620.h>
+
+#pragma config OSC = INTIO67
+#pragma config WDT = OFF
+#pragma config LVP = OFF
+#pragma config BOREN = OFF
+
+#define D2_RED PORTCbits.RC2                                                    // define a pin to a certain bit of a port
+#define D2_GREEN PORTCbits.RC3
+#define D2_BLUE PORTCbits.RC4
+#define D1_RED PORTEbits.RE0
+#define D1_GREEN PORTEbits.RE2
+#define DEC_7 PORTBbits.RB7
+
+
+
+void Flash_LED(unsigned int);
+void DO_DISPLAY_7SEG_Upper(char);                                               // Function Prototyping Area Start
+void DO_DISPLAY_7SEG_Lower(char);
+void DO_DISPLAY_D1(double);
+void DO_DISPLAY_D2(double);
+void buzzer(double);                                                            // Function Prototyping Area End
+    
+char array[10] = {0x01,0x4F,0x12,0x06,0x4C,0x24,0x20,0x0F,0x00,0x04};           //Array for 7-SEG
+char array2[8] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07};                     // Array of number of colors
+
+
+void DO_DISPLAY_7SEG_Upper(char digit){                                         // Create void function to call upon it later to execute any statements made inside of the void                         
+    PORTB = array[digit]&0x7F;                                                  // Set PORTB equal to array of a the char digit
+                                                                                // & mask first 7 bits
+}
+void DO_DISPLAY_7SEG_Lower(char digit){                                         // Create void function to call upon it later to execute any statements made inside of the void 
+    PORTD=array[digit] & 0x7F;                                                  // Set PORTD equal to array of a the char digit 
+                                                                                // & mask first 7 bits
+}
+void SET_D1_NOLIGHT()                                                           // Create void function to call upon it later to execute any statements made inside of the void   
+{
+    D1_RED = 0;                                                                 // Set D1_RED = 0 based on the proper logic to get no light in D1 cathode
+    D1_GREEN = 0;                                                               // Set D1_GREEN = 0 based on the proper logic to get no light in D1 cathode
+} 
+void SET_D1_RED()
+{
+    D1_RED = 1;                                                                 // Set D1_RED = 1 based on the proper logic to get red light in D1 cathode
+    D1_GREEN = 0;                                                               // Set D1_GREEN = 0 based on the proper logic to get red light in D1 cathode
+} 
+void SET_D1_YELLOW()
+{
+    D1_RED = 1;                                                                 // Set D1_RED = 1 based on the proper logic to get yellow light in D1 cathode
+    D1_GREEN = 1;                                                               // Set D1_GREEN = 1 based on the proper logic to get yellow light in D1 cathode
+
+} 
+void SET_D1_GREEN()
+{
+    D1_RED = 0;                                                                 // Set D1_RED = 0 based on the proper logic to get green light in D1 cathode
+    D1_GREEN = 1;                                                               // Set D1_GREEN = 1 based on the proper logic to get green light in D1 cathode
+} 
+
+void SET_D2_NOLIGHT()
+{
+    D2_RED = 0;                                                                 // Set D2_RED = 0 based on the proper logic to get no light in D2 cathode
+    D2_GREEN = 0;                                                               // Set D2_GREEN = 0 based on the proper logic to get no light in D2 cathode
+    D2_BLUE = 0;                                                                // Set D2_BLUE = 0 based on the proper logic to get no light in D2 cathode
+} 
+void SET_D2_RED()
+{
+    D2_RED = 1;                                                                 // Set D2_RED = 1 based on the proper logic to get red light in D2 cathode
+    D2_GREEN = 0;                                                               // Set D2_GREEN = 0 based on the proper logic to get red light in D2 cathode
+    D2_BLUE = 0;                                                                // Set D2_BLUE = 0 based on the proper logic to get red light in D2 cathode
+} 
+
+void SET_D2_YELLOW()
+{
+    D2_RED = 1;                                                                 // Set D2_RED = 1 based on the proper logic to get yellow light in D2 cathode
+    D2_GREEN = 1;                                                               // Set D2_GREEN = 1 based on the proper logic to get yellow light in D2 cathode
+    D2_BLUE = 0;                                                                // Set D2_BLUE = 0 based on the proper logic to get yellow light in D2 cathode
+} 
+void SET_D2_GREEN()
+{
+    D2_RED = 0;                                                                 // Set D2_RED = 0 based on the proper logic to get green light in D2 cathode
+    D2_GREEN = 1;                                                               // Set D2_GREEN = 1based on the proper logic to get green light in D2 cathode
+    D2_BLUE = 0;                                                                // Set D2_BLUE = 0 based on the proper logic to get green light in D2 cathode
+} 
+void SET_D2_BLUE()
+{
+    D2_RED = 0;                                                                 // Set D2_RED = 0 based on the proper logic to get blue light in D2 cathode
+    D2_GREEN = 0;                                                               // Set D2_GREEN = 0 based on the proper logic to get blue light in D2 cathode
+    D2_BLUE = 1;                                                                // Set D2_BLUE = 1based on the proper logic to get blue light in D2 cathode
+} 
+void SET_D2_PURPLE()
+{
+    D2_RED = 1;                                                                 // Set D2_RED = 1 based on the proper logic to get purple light in D2 cathode
+    D2_GREEN = 0;                                                               // Set D2_GREEN = 0 based on the proper logic to get purple light in D2 cathode
+    D2_BLUE = 1;                                                                // Set D2_BLUE = 1based on the proper logic to get purple light in D2 cathode
+} 
+void SET_D2_CYAN()
+{
+    D2_RED = 0;                                                                 // Set D2_RED = 0 based on the proper logic to get cyan light in D2 cathode
+    D2_GREEN = 1;                                                               // Set D2_GREEN = 1 based on the proper logic to get cyan light in D2 cathode
+    D2_BLUE = 1;                                                                // Set D2_BLUE = 1 based on the proper logic to get cyan light in D2 cathode
+} 
+void SET_D2_WHITE()
+{
+    D2_RED = 1;                                                                 // Set D2_RED = 1 based on the proper logic to get white light in D2 cathode
+    D2_GREEN = 1;                                                               // Set D2_GREEN = 1 based on the proper logic to get white light in D2 cathode
+    D2_BLUE = 1;                                                                // Set D2_BLUE = 1 based on the proper logic to get white light in D2 cathode
+} 
+
+void DO_DISPLAY_D2(double digit){                                               // D2 LED function that has if statements 
+    if (digit<10){                                                              // in the if statements it sets a range for 
+                                                                                // the variable digit and if the variable digit
+                                                                                // is in range then execute the function 
+                                                                                // that sets the D2 LED to the corresponding color
+        SET_D2_NOLIGHT();
+    }
+    else if (digit>=10 && digit<20){                                           
+        SET_D2_RED();
+    }
+    else if (digit>=20 && digit<30){                                            
+        SET_D2_GREEN();
+    }
+    else if (digit>=30 && digit<40){                                            
+        SET_D2_YELLOW();
+    }
+    else if (digit>=40 && digit<50){                                           
+        SET_D2_BLUE();
+    }
+    else if (digit>=50 && digit<60){                                           
+        SET_D2_PURPLE();
+    }
+    else if (digit>=60 && digit<70){                                           
+        SET_D2_CYAN();
+    }
+    else if (digit>70){                                                       
+        SET_D2_WHITE();
+    }
+}
+    
+void DO_DISPLAY_D1(double digit){                                               // D1 LED function that has if statements 
+                                                                                // in the if statements it sets a range for 
+                                                                                // the variable digit and if the variable digit
+                                                                                // is in range then execute the function 
+                                                                                // that sets the D1 LED to the corresponding color
+    if (digit>0.1){                                                             
+        SET_D1_NOLIGHT();
+    }
+    else if (digit>=0.07 && digit<=0.1){                                        
+        SET_D1_RED();
+    }
+    else if (digit<0.07){                                                       
+        SET_D1_GREEN();
+    }
+}
+void Activate_Buzzer(){
+    PR2 = 0b11111001 ;
+    T2CON = 0b00000101 ;
+    CCPR2L = 0b01001010 ;
+    CCP2CON = 0b00111100 ;
+} 
+void Deactivate_Buzzer(){
+    CCP2CON = 0x0;
+    PORTCbits.RC1 = 0;
+}
+void buzzer(double digit){                                                      // buzzer function that has if statements 
+                                                                                // in the if statements it sets a range for 
+                                                                                // the variable digit and if the variable digit
+                                                                                // is in range then execute the function 
+                                                                                // that either activates the buzzer or doesn't
+    if(digit<0.07){
+        Activate_Buzzer();
+    }
+    else if (digit>0.07){
+       Deactivate_Buzzer();
+    }
+}
+      
+
+
+unsigned int get_full_ADC(void)
+{
+    int result;                                                                 // Create integer variable 'result'
+    ADCON0bits.GO=1;                                                            // Start Conversion
+    while(ADCON0bits.DONE==1){                                                  // wait for conversion to be completed
+        result = (ADRESH * 0x100) + ADRESL;                                     // combine result of upper byte and
+    }                                                                           // lower byte into result
+    return result;                                                              // return the result.
+} 
+void Set_ADCON0 (char AN_pin)                                                   // Create void function to call upon it later to execute any statements made inside of the void 
+{
+    ADCON0 = AN_pin * 4 + 1;                                                    // Set ADCON0 equal to AN_pin times four plus one
+} 
+void Init_ADC(void)
+{
+    ADCON0=0x01;                                                                // select channel AN0, and turn on the ADC subsystem            
+    ADCON1=0x1A;                                                                // select pins AN0 through AN3 as analog signal, VDD-VSS as
+                                                                                // reference voltage
+    ADCON2=0xA9;                                                                // Set the bit conversion time (TAD) and acquisition time
+                                                                                
+} 
+void putch (char c)                                                             // Given
+{
+    while (!TRMT);
+    TXREG = c;
+}
+void Init_UART()                                                                // Given
+{
+    OpenUSART (USART_TX_INT_OFF & USART_RX_INT_OFF &
+    USART_ASYNCH_MODE & USART_EIGHT_BIT & USART_CONT_RX &
+    USART_BRGH_HIGH, 25);
+    OSCCON = 0x60;
+} 
+
+void main(void){
+    while(1){
+
+        Init_UART();                                                            // call statements within function Init_UART()
+        Init_ADC();                                                             // call statements within function Init_ADC()
+
+        TRISA=0xFF;                                                             // Set all of PORTA as inputs 
+                                                                                // Set the rest as outputs
+        TRISB=0x00;                                                                
+        TRISC=0x00;                                                               
+        TRISD=0x00;                                                                 
+        TRISE=0x00; // call statement
+        Set_ADCON0(1);                                                          // call statements within function Set_ADCON0(0)
+        float num_step = get_full_ADC();                                        // Create integer variable 'num_step' equal to 'get_full_ADC()'
+        float voltage=(num_step*4.0)/1000.0; 
+
+        int UV=(int)voltage;                                                    // Extract Upper Value of Voltage 
+        int LV=(int)(voltage*10)%10;                                            // Extract Lower Value of Voltage 
+        
+        float RR1 = (((0.1)*(voltage))/((4.096)-(voltage)));                    // Using nodal analysis to calculate RREF1
+        float RR2 = (1*voltage)/(4.096-voltage);                                // Using nodal analysis to calculate RREF2
+        float RR3 = (((10)*(voltage))/((4.096)-(voltage)));                     // Using nodal analysis to calculate RREF1
+                
+        if(RR3<10.0){
+            
+            int UR;
+            int LR;
+            if(RR3<1){
+                UR=(int)RR3;                                                    // Extract Upper Value of Resistance 
+                LR=(RR3)*(10);                                                  // Extract Lower Value of Resistance 
+            }
+            else if(RR3>=1 && RR3<10){
+                UR=(int)RR3;                                                    // Extract Upper Value of Resistance 
+                LR=(RR3*10);                                                    // Extract Lower Value of Resistance
+                LR=LR%10;                                                       // Extract Lower Value of Resistance
+            }
+            DO_DISPLAY_7SEG_Upper(UR);                                          // Display Upper Value of Resistance on 7-SEG
+            DO_DISPLAY_7SEG_Lower(LR);                                          // Display Lower Value of Resistance on 7-SEG
+            DEC_7=0;                                                            // Buzzer is off
+        }
+        else if(RR3>=10.0){
+            
+            int UR=(int)RR3*0.1;                                                // Extract Upper Value of Resistance 
+            int LR=(int)(RR3)%10;                                               // Extract Lower Value of Resistance 
+            DO_DISPLAY_7SEG_Upper(UR);                                          // Display Upper Value of Resistance on 7-SEG
+            DO_DISPLAY_7SEG_Lower(LR);                                          // Display Lower Value of Resistance on 7-SEG
+            DEC_7=1;                                                            // Buzzer is on
+        }
+        
+        printf("Ohms= %f(Kohm) \r\n",RR3);                                      //Output the resistance readings onto Teraterm 
+        DO_DISPLAY_D1(RR3);                                                     // Display light color based on result of RR3 going 
+                                                                                // through each if statement
+        DO_DISPLAY_D2(RR3);                                                     // Display light color based on result of RR3 going 
+                                                                                // through each if statement 
+        buzzer(RR3);
+    }
+}                                                                               // RREF1 - RREF3 are represented by the variable
+                                                                                // RR1- RR3. You may test for the different resistances
+                                                                                // by changing the variable RR3 that is incorporated
+                                                                                // in calculations and functions.
