@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <xc.h>
+#include <math.h>
+#include <p18f4620.h>
+
+#pragma config OSC = INTIO67
+#pragma config WDT = OFF
+#pragma config LVP = OFF
+#pragma config BOREN = OFF
+
+void Flash_LED(unsigned int);
+void DO_DISPLAY_7SEG_Upper(char);                                               // Function Prototyping Area Start
+void DO_DISPLAY_7SEG_Lower(char);
+void DO_DISPLAY_D1(int);
+void DO_DISPLAY_D2(int);
+void DO_DISPLAY_D3(double);                                                     // Function Prototyping Area End
+
+char array[10] = {0x01,0x4F,0x12,0x06,0x4C,0x24,0x20,0x0F,0x00,0x04};           //Array for 7-SEG
+char array2[8] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07};                     // Array of number of colors
+
+
+void DO_DISPLAY_7SEG_Upper(char digit){                                         // Create void function to call upon it later to execute any statements made inside of the void 
+                                
+    PORTB = array[digit];                                                       // Set PORTB equal to array of a the char digit
+}
+
+void DO_DISPLAY_7SEG_Lower(char digit){                                         // Create void function to call upon it later to execute any statements made inside of the void 
+    PORTD=array[digit];                                                         // Set PORTB equal to array of a the char digit
+}
+unsigned int get_full_ADC(void)
+{
+    int result;                                                                 // Create integer variable 'result'
+    ADCON0bits.GO=1;                                                            // Start Conversion
+    while(ADCON0bits.DONE==1){                                                  // wait for conversion to be completed
+    result = (ADRESH * 0x100) + ADRESL;                                         // combine result of upper byte and
+    }                                                                           // lower byte into result
+     return result;                                                             // return the result.
+} 
+void Set_ADCON0 (char AN_pin)                                                   // Create void function to call upon it later to execute any statements made inside of the void 
+{
+ ADCON0 = AN_pin * 4 + 1;                                                       // Set ADCON0 equal to AN_pin times four plus one
+} 
+
+void Init_ADC(void)
+{
+    
+    ADCON0=0x01;                                                                // select channel AN0, and turn on the ADC subsystem            
+    ADCON1=0x1A;                                                                // select pins AN0 through AN3 as analog signal, VDD-VSS as
+                                                                                // reference voltage
+    ADCON2=0xA9;                                                                // Set the bit conversion time (TAD) and acquisition time
+                                                                                
+} 
+
+
+
+
+void putch (char c)                                                             // Given
+{
+    while (!TRMT);
+    TXREG = c;
+}
+void Init_UART()                                                                // Given
+{
+    OpenUSART (USART_TX_INT_OFF & USART_RX_INT_OFF &
+    USART_ASYNCH_MODE & USART_EIGHT_BIT & USART_CONT_RX &
+    USART_BRGH_HIGH, 25);
+    OSCCON = 0x60;
+} 
+
+void main(void){
+ while(1){
+     
+    Init_UART();                                                                // call statements within function Init_UART()
+    Init_ADC();                                                                 // call statements within function Init_ADC()
+    
+     TRISA=0x0F;                                                                // Set lower bits of PORTA as inputs and 
+                                                                                //the rest as outputs
+    TRISB=0x00;                                                                 
+    TRISC=0x00;                                                                
+    TRISD=0x00;                                                                 
+    TRISE=0x00; 
+        Set_ADCON0(0);                                                          // call statements within function Set_ADCON0(0)
+        float num_step = get_full_ADC();                                        // Create integer variable 'num_step' equal to 'get_full_ADC()'
+        float voltage_mv=(num_step*4.0)*0.001;                                  // Calculation of voltage using ohms law
+        float U=(int)voltage_mv;                                                // Extract Upper Value of Voltage 
+        float L=(int)(voltage_mv*10)%10;                                        // Extract Lower Value of Voltage
+        DO_DISPLAY_7SEG_Upper(U);                                               // Display Upper Value of Voltage on 7-SEG
+        DO_DISPLAY_7SEG_Lower(L);                                               // Display Lower Value of VOltage on 7-SEG
+        printf("Voltage= %f(V) \r\n",voltage_mv);                               // Output the voltage readings onto Teraterm 
+       
+       
+ }
+}
